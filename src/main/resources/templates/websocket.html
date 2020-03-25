@@ -1,70 +1,102 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>websocket通讯</title>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="http://cdn.bootcss.com/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="https://cdn.bootcss.com/sockjs-client/1.1.4/sockjs.min.js"></script>
+    <script>
+        var socket = new SockJS("http://localhost:8080/education/websocket");
+        var stompClient = Stomp.over(socket);
+        window.onload = function () {
+            connect();
+        }
+
+        //订阅消息
+        function subscribe() {
+            stompClient.subscribe('/user/queue/message', function (response) {
+                console.log("/user/queue/message 你接收到的消息为:" + response);
+            });
+
+        }
+
+        /**
+         * 发送用户信息
+         * */
+        function send0() {
+            stompClient.send("/app/principal", {},
+                {});
+        }
+
+        /**
+         * 发送JSON数据体
+         * */
+        function send() {
+            stompClient.send("/app/P2P", {},
+                JSON.stringify({'name': 'test'}));
+        }
+
+        /**
+         * 发送路径参数
+         * */
+        function send2() {
+            stompClient.send("/app/path/zhangsan/XXX公司", {},
+                {});
+        }
+
+        /**
+         * 发送header参数
+         * */
+        function send3() {
+            stompClient.send("/app/header", {"one": "lalala", "two": "中国"},
+                {});
+        }
+
+        /**
+         * 发送httpsession
+         * */
+        function send4() {
+            stompClient.send("/app/httpsession", {},
+                {});
+        }
+
+        // /**
+        //  * 发送URL中?&参数
+        //  * */
+        // function send5() {
+        //     stompClient.send("/app/param?name=张三", {},
+        //         {});
+        // }
+
+        function connect() {
+
+            stompClient.connect({
+                    Authorization: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjIxOTg1NjQxNjAsImlhdCI6MTUzMTg5NzUwMCwidXNlcm5hbWUiOiJ6cXcxMSJ9.VFR2EKUx5BTYLDkDogiLA9LfNVoPjOzQ3rTWoEy7He4"
+                    //这里可以改成token
+                    // name: 'admin' // 携带客户端信息
+                },
+                function connectCallback(frame) {
+                    // 连接成功时（服务器响应 CONNECTED 帧）的回调方法
+                    alert("success");
+                    subscribe();
+                },
+                function errorCallBack(error) {
+                    // 连接失败时（服务器响应 ERROR 帧）的回调方法
+                    alert("error");
+                });
+        }
+
+        function disconnect() {
+            if (stompClient != null) {
+                stompClient.disconnect();
+            }
+//            setConnected(false);
+            console.log("Disconnected");
+        }
+    </script>
 </head>
-<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.js"></script>
-<script>
-    var socket;
-    function openSocket() {
-        if (typeof (WebSocket) == "undefined") {
-            console.log("您的浏览器不支持WebSocket");
-        } else {
-            console.log("您的浏览器支持WebSocket");
-            //实现化WebSocket对象，指定要连接的服务器地址与端口  建立连接
-            //等同于socket = new WebSocket("ws://localhost:8888/xxxx/im/25");
-            //var socketUrl="${request.contextPath}/im/"+$("#userId").val();
-            var socketUrl = "http://localhost:9001/websocket/imserver/" + $("#userId").val();
-            socketUrl = socketUrl.replace("https", "ws").replace("http", "ws");
-            console.log(socketUrl);
-            if (socket != null) {
-                socket.close();
-                socket = null;
-            }
-            socket = new WebSocket(socketUrl);
-            //打开事件
-            socket.onopen = function () {
-                console.log("websocket已打开");
-                //socket.send("这是来自客户端的消息" + location.href + new Date());
-            };
-            //获得消息事件
-            socket.onmessage = function (msg) {
-                console.log(msg.data);
-                //发现消息进入    开始处理前端触发逻辑
-            };
-            //关闭事件
-            socket.onclose = function () {
-                console.log("websocket已关闭");
-            };
-            //发生了错误事件
-            socket.onerror = function () {
-                console.log("websocket发生了错误");
-            }
-        }
-    }
-
-    function sendMessage() {
-        if (typeof (WebSocket) == "undefined") {
-            console.log("您的浏览器不支持WebSocket");
-        } else {
-            console.log("您的浏览器支持WebSocket");
-            console.log('{"toUserId":"' + $("#toUserId").val() + '","contentText":"' + $("#contentText").val() + '"}');
-            socket.send('{"toUserId":"' + $("#toUserId").val() + '","contentText":"' + $("#contentText").val() + '"}');
-        }
-    }
-</script>
 <body>
-<p>【userId】：
-<div><input id="userId" name="userId" type="text" value="10"></div>
-<p>【toUserId】：
-<div><input id="toUserId" name="toUserId" type="text" value="20"></div>
-<p>【toUserId】：
-<div><input id="contentText" name="contentText" type="text" value="hello websocket"></div>
-<p>【操作】：
-<div><a onclick="openSocket()">开启socket</a></div>
-<p>【操作】：
-<div><a onclick="sendMessage()">发送消息</a></div>
+<input type="text" id="info"/>
+<button onclick="send5();">发送</button>
 </body>
-
 </html>
