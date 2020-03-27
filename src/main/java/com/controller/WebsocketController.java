@@ -1,6 +1,7 @@
 package com.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,8 +14,11 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.simp.user.SimpUser;
 import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.websocket.OnMessage;
 import java.security.Principal;
 import java.util.Map;
 
@@ -24,7 +28,7 @@ import java.util.Map;
  * @create 2019-05-11 13:55
  */
 @Slf4j
-@RestController
+@Controller
 public class WebSocketController {
 
     //spring提供的发送消息模板
@@ -38,11 +42,21 @@ public class WebSocketController {
         this.userRegistry = userRegistry;
     }
 
+    @GetMapping("/get")
+    public String index() {
+        return "/index";
+    }
+
     //广播推送消息
     @Scheduled(fixedRate = 10000)
     public void sendTopicMessage() {
-        System.out.println("后台广播推送！");
-        this.messagingTemplate.convertAndSend("/topic/getResponse", "定时推送");
+        log.info("当前在线人数:" + userRegistry.getUserCount());
+        int i = 1;
+        for (SimpUser user : userRegistry.getUsers()) {
+            log.info("用户" + i++ + "---" + user);
+            messagingTemplate.convertAndSendToUser(user.getName(), "/queue/message", "服务器主动推的数据");
+
+        }
     }
 
     /**
